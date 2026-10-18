@@ -10,12 +10,11 @@ use Illuminate\Validation\Rule;
 
 class MinutaController extends Controller
 {
-    /**
-     * Menampilkan seluruh data minuta
-     */
+
 public function index(Request $request)
 {
-     $query = Minuta::where('dipinjam', false);
+    // Hapus ->where('dipinjam', false) agar data yang dipinjam tetap tampil di tabel master
+    $query = Minuta::query();
 
     if($request->filled('search'))
     {
@@ -52,20 +51,16 @@ public function index(Request $request)
         AS UNSIGNED)
     ")
     ->paginate(10);
+    
     return view('minuta.index', compact('minuta'));
 }
 
-    /**
-     * Menampilkan form tambah minuta
-     */
     public function create()
     {
         return view('minuta.create');
     }
 
-    /**
-     * Menyimpan data minuta
-     */
+  
     public function store(Request $request)
 {
     $request->validate([
@@ -80,7 +75,8 @@ public function index(Request $request)
         'lokasi_gudang' => 'nullable',
         'lokasi_lemari' => 'nullable',
     ],
-    ['nomor_risalah.unique'=>'Nomor risalah sudah pernah terdaftar.',
+    ['nomor_risalah.unique' => 'Nomor risalah ini sudah pernah diinput. Silakan periksa kembali.',
+        'nomor_risalah.required' => 'Nomor risalah wajib diisi.',
     ]);
 
     Minuta::create($request->all());

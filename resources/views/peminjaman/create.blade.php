@@ -245,9 +245,7 @@
 <div class="form-container">
 
 <h2 class="page-title">
-
 Tambah Peminjaman Minuta
-
 </h2>
 
 <form action="{{ route('peminjaman.store') }}" method="POST">
@@ -257,27 +255,23 @@ Tambah Peminjaman Minuta
 <div class="form-card">
 
 <div class="form-group">
-
 <label>Nama Peminjam</label>
-
 <input
-type="text"
-name="nama_peminjam"
-value="{{ old('nama_peminjam') }}"
-required>
-
+    type="text"
+    name="nama_peminjam"
+    value="{{ Session::get('nama_pegawai') }}"
+    readonly
+    style="background-color: #f3f4f6; cursor: not-allowed; font-weight: normal; padding: 10px 14px; font-size: 14px; border: 1px solid #dbe4ee; border-radius: 8px;">
 </div>
 
 <div class="form-group">
-
-<label>Seksi Peminjam</label>
-
-<input
-type="text"
-name="divisi_peminjam"
-value="{{ old('divisi_peminjam') }}"
-required>
-
+    <label>Seksi Peminjam</label>
+    <input
+        type="text"
+        name="seksi_peminjam"
+        value="{{ Session::get('seksi') ?? 'Seksi Lelang' }}"
+        readonly
+        style="background-color: #f3f4f6; cursor: not-allowed; font-weight: normal; padding: 10px 14px; font-size: 14px; border: 1px solid #dbe4ee; border-radius: 8px;">
 </div>
 
 <div class="form-group">
@@ -298,7 +292,8 @@ Pilih Minuta
 <input
 type="hidden"
 name="minuta_id"
-id="minuta_id">
+id="minuta_id"
+required>
 
 <div
 class="info-minuta"
@@ -459,9 +454,9 @@ Kembali
 
 <script>
 
-// ============================
+
 // Ambil Elemen
-// ============================
+
 
 const modal = document.getElementById('modalMinuta');
 
@@ -474,9 +469,9 @@ const inputMinuta = document.getElementById('minuta_id');
 const detailMinuta = document.getElementById('detailMinuta');
 
 
-// ============================
+
 // Buka Modal
-// ============================
+
 
 btnOpen.addEventListener('click', function(){
 
@@ -485,9 +480,9 @@ btnOpen.addEventListener('click', function(){
 });
 
 
-// ============================
+
 // Tutup Modal
-// ============================
+
 
 btnClose.addEventListener('click', function(){
 
@@ -496,9 +491,9 @@ btnClose.addEventListener('click', function(){
 });
 
 
-// ============================
+
 // Klik luar modal
-// ============================
+
 
 window.addEventListener('click', function(e){
 
@@ -511,9 +506,9 @@ window.addEventListener('click', function(e){
 });
 
 
-// ============================
+
 // Tombol Pilih
-// ============================
+
 
 document.querySelectorAll('.pilih-minuta').forEach(function(button){
 
@@ -604,9 +599,9 @@ document.querySelectorAll('.pilih-minuta').forEach(function(button){
     });
 });
 
-// ============================
+
 // Pencarian Modal
-// ============================
+
 
 const searchInput = document.getElementById('searchMinuta');
 

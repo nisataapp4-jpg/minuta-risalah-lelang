@@ -21,17 +21,18 @@ class Minuta extends Model
         'lokasi_gudang',
         'lokasi_lemari',
         'dipinjam',
+        'status',
     ];
 
     public function peminjaman()
-    {
-        return $this->hasMany(Peminjaman::class, 'minuta_id');
-    }
+{
+    return $this->hasMany(\App\Models\Peminjaman::class, 'minuta_id');
+}
 
     public function pengembalian()
-{
+    {
     return $this->hasMany(Pengembalian::class, 'minuta_id');
-}
+    }
 
 public function getLokasiAttribute()
 {

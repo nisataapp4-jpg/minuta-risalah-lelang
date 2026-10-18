@@ -8,12 +8,11 @@ use App\Models\Minuta;
 use Carbon\Carbon;
 use App\Exports\PeminjamanExport;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\DB;
 
 class PeminjamanController extends Controller
 {
-    /**
-     * Menampilkan daftar peminjaman
-     */
+
     public function index(Request $request)
     {
         $query = Peminjaman::with('minuta');
@@ -86,74 +85,54 @@ foreach ($peminjaman as $item) {
 return view('peminjaman.index', compact('peminjaman'));
     }
 
-    /**
-     * Form tambah peminjaman
-     */
-    public function create()
-{
-    $minuta = Minuta::whereNotIn(
-        'id',
-        Peminjaman::pluck('minuta_id')
-    )
-    ->orderBy('tahun_risalah', 'asc')
-    ->orderByRaw("
-        CAST(
-            SUBSTRING_INDEX(nomor_risalah, '/', 1)
-        AS UNSIGNED)
-    ")
-    ->get();
 
-    return view('peminjaman.create', [
-        'minuta' => $minuta
-    ]);
-}
+public function create()
+    {
+        // AMBIL HANYA MINUTA YANG ID-NYA TIDAK ADA DI TABEL PEMINJAMAN YANG BELUM DIKEMBALIKAN
+        // ATAU YANG STATUSNYA BENAR-BENAR 0 / TERSEDIA
+        $minuta = Minuta::where('status', 0)
+            ->whereNotIn('id', Peminjaman::pluck('minuta_id'))
+            ->orderBy('tahun_risalah', 'asc')
+            ->orderByRaw("
+                CAST(
+                    SUBSTRING_INDEX(nomor_risalah, '/', 1)
+                AS UNSIGNED)
+            ")
+            ->get();
 
-    /**
- * Menyimpan data peminjaman
- */
-/**
- * Simpan peminjaman
- */
-public function store(Request $request)
-{
-    $request->validate([
-        'nama_peminjam'   => 'required|string|max:255',
-        'divisi_peminjam' => 'required|string|max:255',
-        'minuta_id'       => 'required|exists:minuta,id',
-    ]);
-
-    // Ambil data minuta
-    $minuta = Minuta::findOrFail($request->minuta_id);
-
-    // Cek apakah minuta masih tersedia
-    if ($minuta->dipinjam) {
-
-        return redirect()
-            ->back()
-            ->withInput()
-            ->with('error', 'Minuta tersebut sedang dipinjam.');
-
+        return view('peminjaman.create', [
+            'minuta' => $minuta
+        ]);
     }
 
-    // Simpan data peminjaman
-    Peminjaman::create([
+    public function store(Request $request)
+    {
+        $request->validate([
+            'minuta_id' => 'required|exists:minuta,id',
+        ], [
+            'minuta_id.required' => 'Pilih minuta yang ingin dipinjam terlebih dahulu.',
+        ]);
 
-        'minuta_id'       => $minuta->id,
-        'nama_peminjam'   => $request->nama_peminjam,
-        'divisi_peminjam' => $request->divisi_peminjam,
-        'tanggal_pinjam'  => now(),
+        $minuta = Minuta::findOrFail($request->minuta_id);
 
-    ]);
+        // Simpan data peminjaman
+        Peminjaman::create([
+            'minuta_id'       => $minuta->id,
+            'nama_peminjam'   => session('nama_pegawai'),
+            'divisi_peminjam' => session('seksi'),
+            'tanggal_pinjam'  => now(),
+        ]);
 
-    // Ubah status minuta menjadi dipinjam
-    $minuta->update([
-        'dipinjam' => true
-    ]);
+        // PASTIKAN STATUS DI TABEL MINUTA BERUBAH JADI 1
+        $minuta->update([
+            'status'   => 1,
+            'dipinjam' => 1
+        ]);
 
-    return redirect()
-        ->route('peminjaman.index')
-        ->with('success', 'Peminjaman minuta berhasil disimpan.');
-}
+        return redirect()
+            ->route('peminjaman.index')
+            ->with('success', 'Peminjaman minuta berhasil disimpan.');
+    }
 
     public function show(string $id)
     {

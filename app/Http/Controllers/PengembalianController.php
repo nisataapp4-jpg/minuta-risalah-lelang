@@ -11,16 +11,12 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class PengembalianController extends Controller
 {
-    /**
-     * Menampilkan daftar riwayat pengembalian
-     */
+
     public function index(Request $request)
     {
         $query = Pengembalian::with('minuta');
 
-        // ==========================
-        // PENCARIAN
-        // ==========================
+
         if ($request->filled('search')) {
 
             $search = $request->search;
@@ -48,9 +44,9 @@ class PengembalianController extends Controller
 
         }
 
-        // ==========================
+
         // FILTER TAHUN
-        // ==========================
+
         if ($request->filled('tahun_awal')) {
 
             $query->whereHas('minuta', function ($m) use ($request) {
@@ -80,75 +76,47 @@ class PengembalianController extends Controller
         return view('pengembalian.index', compact('pengembalian'));
     }
 
-    /**
- * Form tambah pengembalian
- */
+
 public function create()
 {
-    $peminjaman = Peminjaman::with('minuta')
-                    ->orderBy('tanggal_pinjam', 'asc')
-                    ->get();
-
-    foreach ($peminjaman as $item) {
-
-    $item->umur_pinjam = \Carbon\Carbon::parse($item->tanggal_pinjam)
-                        ->diffInDays(now());
-
-}
+    // Mengambil transaksi peminjaman aktif yang terhubung ke model Minuta
+    $peminjaman = \App\Models\Peminjaman::with('minuta')->get();
 
     return view('pengembalian.create', compact('peminjaman'));
 }
 
-    /**
-     * Simpan pengembalian
-     */
-    /**
- * Simpan pengembalian
- */
 public function store(Request $request)
 {
-    // ==========================
-    // Validasi
-    // ==========================
     $request->validate([
-        'minuta_id' => 'required|exists:minuta,id',
-        'nama_pengembali' => 'required|string|max:255',
-        'divisi_pengembali' => 'required|string|max:255',
+        'peminjaman_id' => 'required|exists:peminjaman,id',
+    ], [
+        'peminjaman_id.required' => 'Pilih transaksi peminjaman yang akan dikembalikan.',
     ]);
 
-    // ==========================
-    // Ambil data minuta
-    // ==========================
-    $minuta = Minuta::findOrFail($request->minuta_id);
+    $peminjaman = Peminjaman::with('minuta')->findOrFail($request->peminjaman_id);
 
-    // ==========================
-    // Simpan ke tabel pengembalian
-    // ==========================
+    // 1. Simpan ke tabel riwayat pengembalian
     Pengembalian::create([
-        'minuta_id' => $minuta->id,
-        'nama_pengembali' => $request->nama_pengembali,
-        'divisi_pengembali' => $request->divisi_pengembali,
-        'tanggal_kembali' => now(),
+        'minuta_id'         => $peminjaman->minuta_id,
+        'nama_pengembali'   => $peminjaman->nama_peminjam,
+        'divisi_pengembali' => $peminjaman->divisi_peminjam ?? 'Seksi Lelang',
+        'tanggal_kembali'   => now(),
     ]);
 
-    // ==========================
-    // Kembalikan status minuta
-    // ==========================
-    $minuta->update([
-        'dipinjam' => false,
-    ]);
+    // 2. Kembalikan status minuta menjadi 0 (Tersedia)
+    if ($peminjaman->minuta) {
+        $peminjaman->minuta->update([
+            'status'   => 0,
+            'dipinjam' => false
+        ]);
+    }
 
-    // ==========================
-    // Hapus dari tabel peminjaman
-    // ==========================
-    Peminjaman::where('minuta_id', $minuta->id)->delete();
+    // 3. Hapus data dari tabel peminjaman aktif
+    $peminjaman->delete();
 
-    // ==========================
-    // Redirect
-    // ==========================
     return redirect()
-            ->route('pengembalian.index')
-            ->with('success', 'Minuta berhasil dikembalikan.');
+        ->route('pengembalian.index')
+        ->with('success', 'Minuta berhasil dikembalikan dan status telah diperbarui.');
 }
 
 public function export(Request $request)

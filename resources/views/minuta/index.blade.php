@@ -7,13 +7,9 @@
 <style>
 
 .pagination-wrapper{
-
     display:flex;
-
     justify-content:flex-end;
-
     margin-top:25px;
-
 }
 
 .page-title{
@@ -119,50 +115,30 @@
 }
 
 .btn-export{
-
     display:inline-flex;
-
     align-items:center;
-
     justify-content:center;
-
     min-width:145px;
-
     height:46px;
-
     padding:0 18px;
-
     background:linear-gradient(135deg,#198754,#2eb85c);
-
     color:#fff;
-
     border:none;
-
     border-radius:8px;
-
     text-decoration:none;
-
     font-size:14px;
-
     font-weight:600;
-
     transition:.25s;
-
     box-sizing:border-box;
-
 }
 
 .btn-export:hover{
-
     background:linear-gradient(135deg,#157347,#23914a);
-
     color:#fff;
-
     transform:translateY(-2px);
-
     box-shadow:0 6px 12px rgba(25,135,84,.25);
-
 }
+
 /* ================= TABLE ================= */
 
 .table-container{
@@ -218,184 +194,147 @@ tbody tr:hover{
 
 <div class="filter-box">
 
-<form action="{{ route('minuta.index') }}" method="GET">
+    <form action="{{ route('minuta.index') }}" method="GET">
 
-<div class="filter-container">
+        <div class="filter-container">
 
-<div class="filter-left">
+            <div class="filter-left">
 
-<div class="form-group">
+                <div class="form-group">
+                    <label>Pencarian</label>
+                    <input type="text" name="search" class="search-input" placeholder="Cari data..." value="{{ request('search') }}">
+                </div>
 
-<label>Pencarian</label>
+                <div class="form-group">
+                    <label>Filter Tahun</label>
+                    <div class="tahun-group">
+                        <input type="number" name="tahun_awal" class="search-input" value="{{ request('tahun_awal') }}" min="1000" max="3000">
+                        <span>s/d</span>
+                        <input type="number" name="tahun_akhir" class="search-input" value="{{ request('tahun_akhir') }}" min="1000" max="3000">
+                    </div>
+                </div>
 
-<input
-type="text"
-name="search"
-class="search-input"
-placeholder="Cari data..."
-value="{{ request('search') }}">
+                <div class="button-group">
+                    <button type="submit" class="btn btn-primary">Cari</button>
+                    <a href="{{ route('minuta.index') }}" class="btn btn-secondary">Reset</a>
+                </div>
 
-</div>
+            </div>
 
-<div class="form-group">
+            <div style="display:flex; justify-content:flex-end; gap:8px;">
 
-<label>Filter Tahun</label>
+                <a href="{{ route('minuta.export', request()->query()) }}" class="btn btn-export">
+                    Export Excel
+                </a>
 
-<div class="tahun-group">
+                {{-- HANYA ADMIN YANG DAPAT MEMBUAT MINUTA BARU --}}
+                @if(Session::get('role') == 'Admin')
+                    <a href="{{ route('minuta.create') }}" class="btn btn-primary">
+                        Tambah Minuta
+                    </a>
+                @endif
 
-<input
-type="number"
-name="tahun_awal"
-class="search-input"
-value="{{ request('tahun_awal') }}"
-min="1000"
-max="3000">
+            </div>
 
-<span>s/d</span>
+        </div>
 
-<input
-type="number"
-name="tahun_akhir"
-class="search-input"
-value="{{ request('tahun_akhir') }}"
-min="1000"
-max="3000">
-
-</div>
-
-</div>
-
-<div class="button-group">
-
-<button type="submit" class="btn btn-primary">
-Cari
-</button>
-
-<a href="{{ route('minuta.index') }}" class="btn btn-secondary">
-Reset
-</a>
-
-</div>
-
-</div>
-
-<div style="display:flex; justify-content:flex-end; gap:8px;">
-
-    <a href="{{ route('minuta.export', request()->query()) }}" class="btn btn-export">
-    Export Excel
-</a>
-
-    <a href="{{ route('minuta.create') }}" class="btn btn-primary">
-        Tambah Minuta
-    </a>
-
-</div>
-
-</div>
-
-</form>
+    </form>
 
 </div>
 
 <div class="table-container">
 
-<table>
+    <table>
 
-<thead>
+        <thead>
 
-<tr>
+            <tr>
 
-<th>No</th>
-<th>Tahun</th>
-<th>Lokasi</th>
-<th>Nomor Risalah</th>
-<th>Tanggal</th>
-<th>Pemohon</th>
-<th>Debitur</th>
-<th>Objek</th>
-<th>Jenis</th>
-<th>Pejabat</th>
-<th width="130">Aksi</th>
+                <th>No</th>
+                <th>Tahun</th>
+                <th>Lokasi</th>
+                <th>Nomor Risalah</th>
+                <th>Tanggal</th>
+                <th>Pemohon</th>
+                <th>Debitur</th>
+                <th>Objek</th>
+                <th>Jenis</th>
+                <th>Pejabat</th>
+                <th>Status</th>
+                @if(Session::get('role') == 'Admin')
+                    <th width="130">Aksi</th>
+                @endif
 
-</tr>
+            </tr>
 
-</thead>
+        </thead>
 
-<tbody>
+        <tbody>
 
-@forelse($minuta as $item)
+            @forelse($minuta as $item)
 
-<tr>
+            <tr>
 
-<td>{{ ($minuta->currentPage()-1)*$minuta->perPage()+$loop->iteration }}</td>
-
-<td>{{ $item->tahun_risalah }}</td>
-
-<td>{{ $item->lokasi }}</td>
-
-<td>{{ $item->nomor_risalah }}</td>
-
-<td>{{ \Carbon\Carbon::parse($item->tanggal_risalah)->format('d-m-Y') }}</td>
-
-<td>{{ $item->pemohon_lelang }}</td>
-
+                <td>{{ ($minuta->currentPage()-1)*$minuta->perPage()+$loop->iteration }}</td>
+                <td>{{ $item->tahun_risalah }}</td>
+                <td>{{ $item->lokasi }}</td>
+                <td>{{ $item->nomor_risalah }}</td>
+                <td>{{ \Carbon\Carbon::parse($item->tanggal_risalah)->format('d-m-Y') }}</td>
+                <td>{{ $item->pemohon_lelang }}</td>
+                <td>{{ \Illuminate\Support\Str::limit($item->nama_debitur, 50, '...') }}</td>
+                <td>{{ \Illuminate\Support\Str::limit($item->objek, 50, '...') }}</td>
+                <td>{{ $item->jenis_lelang }}</td>
+                <td>{{ $item->pejabat_lelang }}</td>
+                
+               <!-- Kolom Status (Otomatis deteksi dari relasi peminjaman) -->
 <td>
-    {{ \Illuminate\Support\Str::limit($item->nama_debitur, 50, '...') }}
+    @if($item->peminjaman && $item->peminjaman->count() > 0)
+        <span class="badge-status badge-dipinjam">Dipinjam</span>
+    @elseif((isset($item->status) && $item->status == 1) || (isset($item->dipinjam) && $item->dipinjam == 1))
+        <span class="badge-status badge-dipinjam">Dipinjam</span>
+    @else
+        <span class="badge-status badge-tersedia">Tersedia</span>
+    @endif
 </td>
 
-<td>
-    {{ \Illuminate\Support\Str::limit($item->objek, 50, '...') }}
-</td>
+                {{-- HANYA ADMIN YANG MEMILIKI HAK AKSES EDIT / HAPUS --}}
+                @if(Session::get('role') == 'Admin')
+                <td>
 
-<td>{{ $item->jenis_lelang }}</td>
+                    <div class="action">
 
-<td>{{ $item->pejabat_lelang }}</td>
+                        <a href="{{ route('minuta.edit',$item->id) }}" class="btn btn-warning">
+                            Edit
+                        </a>
 
-<td>
+                        <form action="{{ route('minuta.destroy',$item->id) }}" method="POST" class="delete-form" style="display:inline;">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-danger">Hapus</button>
+                        </form>
 
-<div class="action">
+                    </div>
 
-<a href="{{ route('minuta.edit',$item->id) }}" class="btn btn-warning">
-Edit
-</a>
+                </td>
+                @endif
 
-<form action="{{ route('minuta.destroy',$item->id) }}"
-      method="POST"
-      class="delete-form"
-      style="display:inline;">
+            </tr>
 
-@csrf
-@method('DELETE')
+            @empty
 
-<button type="submit" class="btn btn-danger">
-Hapus
-</button>
+            <tr>
 
-</form>
+                <td colspan="{{ Session::get('role') == 'Admin' ? '12' : '11' }}">
+                    Belum ada data minuta.
+                </td>
 
-</div>
+            </tr>
 
-</td>
+            @endforelse
 
-</tr>
+        </tbody>
 
-@empty
-
-<tr>
-
-<td colspan="13">
-
-Belum ada data minuta.
-
-</td>
-
-</tr>
-
-@endforelse
-
-</tbody>
-
-</table>
+    </table>
 
 </div>
 

@@ -237,10 +237,13 @@ Reset
         Export Excel
     </a>
 
-    <a href="{{ route('pengembalian.create') }}"
-   class="btn btn-primary">
-    Tambah Pengembalian
-</a>
+    {{-- HANYA ADMIN YANG DAPAT MELIHAT TOMBOL TAMBAH PENGEMBALIAN --}}
+    @if(Session::get('role') == 'Admin')
+        <a href="{{ route('pengembalian.create') }}"
+           class="btn btn-primary">
+            Tambah Pengembalian
+        </a>
+    @endif
 
 </div>
 

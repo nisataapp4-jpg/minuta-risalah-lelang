@@ -78,71 +78,63 @@
 }
 
 .action-button{
-
     display:flex;
-
     justify-content:flex-end;
-
     align-items:center;
-
     gap:8px;
-
     margin-left:auto;
-
 }
 
 .btn-export{
-
     display:inline-flex;
-
     justify-content:center;
-
     align-items:center;
-
     width:150px;
-
     height:46px;
-
     background:linear-gradient(135deg,#198754,#2eb85c);
-
     color:#fff;
-
     border:none;
-
     border-radius:6px;
-
     text-decoration:none;
-
     font-size:14px;
-
     font-weight:600;
-
     transition:.25s;
-
 }
 
 .btn-export:hover{
-
     background:linear-gradient(135deg,#157347,#23914a);
-
     color:#fff;
-
 }
 
 .action-button .btn-primary{
-
     width:220px;
-
     height:46px;
-
     display:inline-flex;
-
     justify-content:center;
-
     align-items:center;
-
     font-weight:600;
+}
 
+/* ================= INDIKATOR STATUS PEMINJAMAN ================= */
+
+.status-hijau,
+.status-merah{
+    display:inline-block;
+    width:14px;
+    height:14px;
+    border-radius:50%;
+    vertical-align:middle;
+    margin-right:6px;
+}
+
+.status-hijau{
+    background:#28a745;
+    box-shadow:0 0 6px rgba(40, 167, 69, 0.4);
+}
+
+.status-merah{
+    background:#dc3545;
+    box-shadow:0 0 6px rgba(220, 53, 69, 0.4);
 }
 
 </style>
@@ -270,134 +262,93 @@ document.addEventListener('DOMContentLoaded',function(){
 
     <table>
 
-<div class="table-container">
+        <thead>
 
-<table>
+            <tr>
 
-<thead>
+                <th>No</th>
+                <th>Nama Peminjam</th>
+                <th>Seksi</th>
+                <th>Tahun</th>
+                <th>Lokasi</th>
+                <th>Nomor Risalah</th>
+                <th>Tanggal</th>
+                <th>Pemohon</th>
+                <th>Debitur</th>
+                <th>Objek</th>
+                <th>Jenis</th>
+                <th>Pejabat</th>
+                <th>Tanggal Pinjam</th>
+                <th>Status (Umur Pinjam)</th>
 
-<tr>
+            </tr>
 
-<th>No</th>
+        </thead>
 
-<th>Nama Peminjam</th>
+        <tbody>
 
-<th>Seksi</th>
+        @forelse($peminjaman as $item)
 
-<th>Tahun</th>
+            <tr>
 
-<th>Lokasi</th>
+                <td>
+                    {{ ($peminjaman->currentPage()-1) * $peminjaman->perPage() + $loop->iteration }}
+                </td>
 
-<th>Nomor Risalah</th>
+                <td>{{ $item->nama_peminjam }}</td>
+                <td>{{ $item->divisi_peminjam }}</td>
+                <td>{{ optional($item->minuta)->tahun_risalah }}</td>
+                <td>{{ optional($item->minuta)->lokasi }}</td>
+                <td>{{ optional($item->minuta)->nomor_risalah }}</td>
+                <td>
+                    {{ \Carbon\Carbon::parse(optional($item->minuta)->tanggal_risalah)->format('d-m-Y') }}
+                </td>
+                <td>{{ optional($item->minuta)->pemohon_lelang }}</td>
+                <td>
+                    {{ \Illuminate\Support\Str::limit(optional($item->minuta)->nama_debitur, 50, '...') }}
+                </td>
+                <td>
+                    {{ \Illuminate\Support\Str::limit(optional($item->minuta)->objek, 50, '...') }}
+                </td>
+                <td>{{ optional($item->minuta)->jenis_lelang }}</td>
+                <td>{{ optional($item->minuta)->pejabat_lelang }}</td>
+                <td>
+                    {{ \Carbon\Carbon::parse($item->tanggal_pinjam)->format('d-m-Y') }}
+                </td>
 
-<th>Tanggal</th>
+                <!-- Indikator Status & Umur Pinjam -->
+                <td style="text-align: center; white-space: nowrap;">
+                    @if($item->umur_pinjam >= 7)
+                        <span class="status-merah" title="Mendekati / Memasuki Batas Pengembalian"></span>
+                        <span style="color: #dc3545; font-weight: 600;">{{ $item->umur_pinjam }} Hari</span>
+                    @else
+                        <span class="status-hijau" title="Masa Pinjam Aman"></span>
+                        <span style="color: #28a745; font-weight: 600;">{{ $item->umur_pinjam }} Hari</span>
+                    @endif
+                </td>
 
-<th>Pemohon</th>
+            </tr>
 
-<th>Debitur</th>
+        @empty
 
-<th>Objek</th>
+            <tr>
 
-<th>Jenis</th>
+                <td colspan="14" style="text-align:center;">
+                    Belum ada data peminjaman.
+                </td>
 
-<th>Pejabat</th>
+            </tr>
 
-<th>Tanggal Pinjam</th>
+        @endforelse
 
-<th>Status</th>
+        </tbody>
 
-</tr>
-
-</thead>
-
-<tbody>
-
-@forelse($peminjaman as $item)
-
-<tr>
-
-<td>
-
-{{ ($peminjaman->currentPage()-1) * $peminjaman->perPage() + $loop->iteration }}
-
-</td>
-
-<td>{{ $item->nama_peminjam }}</td>
-
-<td>{{ $item->divisi_peminjam }}</td>
-
-<td>{{ optional($item->minuta)->tahun_risalah }}</td>
-
-<td>{{ optional($item->minuta)->lokasi }}</td>
-
-<td>{{ optional($item->minuta)->nomor_risalah }}</td>
-
-<td>
-
-{{ \Carbon\Carbon::parse(optional($item->minuta)->tanggal_risalah)->format('d-m-Y') }}
-
-</td>
-
-
-<td>{{ optional($item->minuta)->pemohon_lelang }}</td>
-
-<td>
-    {{ \Illuminate\Support\Str::limit(optional($item->minuta)->nama_debitur, 50, '...') }}
-</td>
-
-<td>
-    {{ \Illuminate\Support\Str::limit(optional($item->minuta)->objek, 50, '...') }}
-</td>
-
-<td>{{ optional($item->minuta)->jenis_lelang }}</td>
-
-<td>{{ optional($item->minuta)->pejabat_lelang }}</td>
-
-<td>
-
-{{ \Carbon\Carbon::parse($item->tanggal_pinjam)->format('d-m-Y') }}
-
-</td>
-
-<td class="text-center">
-
-@if($item->umur_pinjam >= 7)
-
-    <span class="status-merah"></span>
-
-@else
-
-    <span class="status-hijau"></span>
-
-@endif
-
-</td>
-
-</tr>
-
-@empty
-
-<tr>
-
-<td colspan="15" style="text-align:center;">
-
-Belum ada data peminjaman.
-
-</td>
-
-</tr>
-
-@endforelse
-
-</tbody>
-
-</table>
+    </table>
 
 </div>
 
 <div style="margin-top:20px; display:flex; justify-content:flex-end;">
-
     {{ $peminjaman->links() }}
-
 </div>
+
 @endsection
